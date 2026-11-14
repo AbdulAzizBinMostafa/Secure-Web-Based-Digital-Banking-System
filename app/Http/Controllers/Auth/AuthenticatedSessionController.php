@@ -25,9 +25,16 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
-$request->session()->regenerate();
-Auth::user()->update(['is_mfa_verified' => false]); // Add this line
-return redirect()->intended(route('dashboard', absolute: false));
+
+        $request->session()->regenerate();
+
+        // ABDUL AZIZ: Destroy other active sessions for this user globally
+        Auth::logoutOtherDevices($request->password);
+
+        $user = Auth::user();
+        $user->update(['is_mfa_verified' => false]);
+
+        return redirect()->intended(route('dashboard', absolute: false));
     }
 
     /**
